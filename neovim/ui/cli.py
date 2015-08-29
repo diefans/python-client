@@ -5,9 +5,36 @@ import sys
 import shlex
 
 import click
+import yaml
 
 from .ui_bridge import UIBridge
 from .. import attach
+
+
+CONFIG_FILES = (
+    '.pynvim.yaml',
+    '~/.pynvim.yaml',
+    '~/.config/pynvim/config.yaml'
+)
+
+
+def load_config(config_file):
+    """Load config values from yaml."""
+
+    if config_file:
+        with open(config_file) as f:
+            return yaml.load(f)
+
+    else:
+        for config_file in CONFIG_FILES:
+            try:
+                with open(os.path.expanduser(config_file)) as f:
+                    return yaml.load(f)
+
+            except IOError:
+                pass
+
+    return {}
 
 
 # http://code.activestate.com/recipes/278731-creating-a-daemon-the-python-way/
@@ -82,15 +109,17 @@ def detach_proc():
               default='disable',
               type=click.Choice(['ncalls', 'tottime', 'percall', 'cumtime',
                                  'name', 'disable']))
+@click.option('config_file', '--config', type=click.Path(exists=True))
 @click.option('--detach/--no-detach', default=True, is_flag=True)
 @click.pass_context
-def main(ctx, prog, notify, listen, connect, profile, detach):
+def main(ctx, prog, notify, listen, connect, profile, config_file, detach):
     """Entry point."""
 
     if detach:
         exit_code = detach_proc()
 
     address = connect or listen
+
 
     if address:
         import re
@@ -130,7 +159,8 @@ def main(ctx, prog, notify, listen, connect, profile, detach):
         nvim = attach('child', argv=nvim_argv)
 
     from .gtk_ui import GtkUI
-    ui = GtkUI()
+    config = load_config(config_file)
+    ui = GtkUI(config)
     bridge = UIBridge()
     bridge.connect(nvim, ui, profile if profile != 'disable' else None, notify)
 
