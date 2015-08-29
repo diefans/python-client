@@ -38,17 +38,10 @@ def load_config(config_file):
 
 
 # http://code.activestate.com/recipes/278731-creating-a-daemon-the-python-way/
-def detach_proc():
+def detach_proc(workdir='.', umask=0):
     """Detach a process from the controlling terminal and run it in the
     background as a daemon.
     """
-
-    # Default daemon parameters.
-    # File mode creation mask of the daemon.
-    UMASK = 0
-
-    # Default working directory for the daemon.
-    WORKDIR = "/"
 
     # Default maximum for the number of available file descriptors.
     MAXFD = 1024
@@ -74,8 +67,8 @@ def detach_proc():
             raise Exception, "%s [%d]" % (e.strerror, e.errno)
 
         if (pid == 0):
-            os.chdir(WORKDIR)
-            os.umask(UMASK)
+            os.chdir(workdir)
+            os.umask(umask)
         else:
             os._exit(0)
     else:
