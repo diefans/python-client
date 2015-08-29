@@ -5,6 +5,7 @@ from setuptools import setup
 
 install_requires = [
     'msgpack-python>=0.4.0',
+    'pyyaml'
 ]
 extras_require = {}
 entry_points = {}

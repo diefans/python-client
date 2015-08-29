@@ -62,13 +62,14 @@ class GtkUI(object):
 
     """Gtk+ UI class."""
 
-    def __init__(self):
+    def __init__(self, config):
         """Initialize the UI instance."""
         self._redraw_arg = None
-        self._foreground = -1
-        self._background = -1
-        self._font_size = 13
-        self._font_name = 'Monospace'
+        self._foreground = config.get('foreground', -1)
+        self._background = config.get('background', -1)
+        self._window_background = config.get('window_background', '#aaaaaa')
+        self._font_size = config.get('font_size', 13)
+        self._font_name = config.get('font_name', 'Monospace')
         self._screen = None
         self._attrs = None
         self._busy = False
@@ -101,6 +102,8 @@ class GtkUI(object):
         window.connect('button-release-event', self._gtk_button_release)
         window.connect('motion-notify-event', self._gtk_motion_notify)
         window.connect('scroll-event', self._gtk_scroll)
+        window.modify_bg(Gtk.StateType.NORMAL,
+                         Gdk.color_parse(self._window_background))
         window.show_all()
         im_context = Gtk.IMContextSimple()
         im_context.connect('commit', self._gtk_input)

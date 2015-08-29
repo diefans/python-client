@@ -1,10 +1,38 @@
 """CLI for accessing the gtk/tickit UIs implemented by this package."""
+import os
 import shlex
 
 import click
+import yaml
 
 from .ui_bridge import UIBridge
 from .. import attach
+
+
+CONFIG_FILES = (
+    '.pynvim.yaml',
+    '~/.pynvim.yaml',
+    '~/.config/pynvim/config.yaml'
+)
+
+
+def load_config(config_file):
+    """Load config values from yaml."""
+
+    if config_file:
+        with open(config_file) as f:
+            return yaml.load(f)
+
+    else:
+        for config_file in CONFIG_FILES:
+            try:
+                with open(os.path.expanduser(config_file)) as f:
+                    return yaml.load(f)
+
+            except IOError:
+                pass
+
+    return {}
 
 
 @click.command(context_settings=dict(allow_extra_args=True))
@@ -16,10 +44,13 @@ from .. import attach
               default='disable',
               type=click.Choice(['ncalls', 'tottime', 'percall', 'cumtime',
                                  'name', 'disable']))
+@click.option('config_file', '--config', type=click.Path(exists=True))
 @click.pass_context
-def main(ctx, prog, notify, listen, connect, profile):
+def main(ctx, prog, notify, listen, connect, profile, config_file):
     """Entry point."""
+
     address = connect or listen
+
 
     if address:
         import re
@@ -59,7 +90,8 @@ def main(ctx, prog, notify, listen, connect, profile):
         nvim = attach('child', argv=nvim_argv)
 
     from .gtk_ui import GtkUI
-    ui = GtkUI()
+    config = load_config(config_file)
+    ui = GtkUI(config)
     bridge = UIBridge()
     bridge.connect(nvim, ui, profile if profile != 'disable' else None, notify)
 
