@@ -278,6 +278,9 @@ class GtkUI(object):
     def _nvim_set_icon(self, icon):
         self._window.set_icon_name(icon)
 
+    def _nvim_update_menu(self):
+        pass
+
     def _gtk_draw(self, wid, cr):
         if not self._screen:
             return
